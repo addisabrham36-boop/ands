@@ -1,3 +1,6 @@
+import json
+
+
 class Session:
     """Holds global state shared across every module in a console session."""
 
@@ -5,9 +8,10 @@ class Session:
         self.globals = {
             "TARGET": "",
             "INTERFACE": "",
+            "ALERT_OUT": "",
         }
-        self.alert_history = []   # every alert raised this session, for `uniq`
-        self.artifacts = {}       # {"pcap": path, "log": path, "report": path} from the last run
+        self.alert_history = []
+        self.artifacts = {}
 
     def set_global(self, key, value):
         self.globals[key.upper()] = value
@@ -16,8 +20,11 @@ class Session:
         return self.globals.get(key.upper(), default)
 
     def add_alert(self, alert):
-        """alert = dict like {'source': ip, 'type': ..., 'detail': ..., 'time': ...}"""
         self.alert_history.append(alert)
+        alert_out = self.get_global("ALERT_OUT")
+        if alert_out:
+            with open(alert_out, "a") as f:
+                f.write(json.dumps(alert) + "\n")
 
     def clear_alerts(self):
         self.alert_history = []
