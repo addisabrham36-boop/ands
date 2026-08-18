@@ -17,21 +17,22 @@ Most student network security projects wrap existing tools (nmap, Wireshark) aro
 ```bash
 git clone https://github.com/addisabrham36-boop/ands.git
 cd ands
-python3 -m venv venv
-source venv/bin/activate
-pip install -e .
+pipx install .
+pipx ensurepath
+sudo ln -s ~/.local/bin/ANDS-shell /usr/local/bin/ANDS-shell
 ```
+
+Open a new terminal after this so your PATH updates.
 
 ## Usage
 
 ```bash
 sudo ANDS-shell
 ```
-
-#ands > use detect/portscan
-#ands (detect/portscan) > set INTERFACE eth0
-#ands (detect/portscan) > set DURATION 30
-#ands (detect/portscan) > run
+ands > use detect/portscan
+ands (detect/portscan) > set INTERFACE eth0
+ands (detect/portscan) > set DURATION 30
+ands (detect/portscan) > run
 
 
 ## Modules
@@ -63,6 +64,7 @@ Unit tests validate the z-score detection math against known synthetic spikes. `
 ANDS does not block, prevent, or actively respond to detected threats — detection only. Not designed for distributed/multi-host monitoring. Detection methods are statistical and pattern-based, not machine-learning-driven. Tested only in a controlled lab environment (Metasploitable2, host-only VirtualBox network), not production networks.
 
 ## Author
+
 Built as an admission project for the INSA Bahir Dar University Cybersecurity program.
 
 **Abrham Addis Tefera**

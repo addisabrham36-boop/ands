@@ -1,3 +1,4 @@
+README.md
 pyproject.toml
 ands.egg-info/PKG-INFO
 ands.egg-info/SOURCES.txt
