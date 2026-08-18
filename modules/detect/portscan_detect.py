@@ -1,6 +1,6 @@
 from core.module_base import ModuleBase
 from scapy.all import sniff, TCP
-import time
+from datetime import datetime
 from collections import defaultdict
 
 
@@ -13,12 +13,24 @@ class PortScanDetect(ModuleBase):
             "SCAN_THRESHOLD": {"value": "10", "required": True, "desc": "Distinct ports from one source to trigger an alert"},
         }
         self.ports_by_source = defaultdict(set)
+        self.already_alerted = set()
 
     def _on_packet(self, pkt):
         if pkt.haslayer(TCP):
             src = pkt[0][1].src if pkt.haslayer("IP") else None
-            if src:
-                self.ports_by_source[src].add(pkt[TCP].dport)
+            if not src:
+                return
+            self.ports_by_source[src].add(pkt[TCP].dport)
+            threshold = int(self.options["SCAN_THRESHOLD"]["value"])
+            if len(self.ports_by_source[src]) >= threshold and src not in self.already_alerted:
+                self.already_alerted.add(src)
+                ts = datetime.now().strftime("%H:%M:%S")
+                print(f"[ALERT] {src:<16} (Status: PORT_SCAN) [ports: {len(self.ports_by_source[src])}] [{ts}]")
+                self.session.add_alert({
+                    "type": "PORT_SCAN",
+                    "source": src,
+                    "port_count": len(self.ports_by_source[src]),
+                })
 
     def run(self):
         iface = self.options["INTERFACE"]["value"]
@@ -26,19 +38,20 @@ class PortScanDetect(ModuleBase):
         threshold = int(self.options["SCAN_THRESHOLD"]["value"])
 
         self.ports_by_source = defaultdict(set)
-        print(f"[*] Watching {iface} for port scans ({duration}s, threshold={threshold} ports)...")
+        self.already_alerted = set()
 
-        sniff(iface=iface, filter="tcp", prn=self._on_packet, timeout=duration)
+        print(f"[*] Watching {iface} for {duration}s (threshold: {threshold} ports)")
 
-        alerts = 0
-        for src, ports in self.ports_by_source.items():
-            if len(ports) >= threshold:
-                alerts += 1
-                print(f"[ALERT] {src}  (Status: PORT_SCAN) [ports: {len(ports)}]")
-                self.session.add_alert({
-                    "type": "PORT_SCAN",
-                    "source": src,
-                    "port_count": len(ports),
-                })
+        try:
+            sniff(iface=iface, filter="tcp", prn=self._on_packet, timeout=duration)
+        except PermissionError:
+            print("[-] Permission denied. Run ANDS with sudo to capture packets.")
+            return
+        except OSError as e:
+            print(f"[-] Interface error: {e}. Check the interface name with 'ip a'.")
+            return
+        except KeyboardInterrupt:
+            print("\n[*] Monitoring interrupted by user.")
+            return
 
-        print(f"\n[+] Scan complete — {alerts} alert(s) across {len(self.ports_by_source)} host(s)")
+        print(f"[+] Done — {len(self.already_alerted)} alert(s), {len(self.ports_by_source)} host(s) seen")

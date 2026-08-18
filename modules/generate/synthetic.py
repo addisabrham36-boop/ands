@@ -1,5 +1,5 @@
 from core.module_base import ModuleBase
-from scapy.all import IP, TCP, ICMP, send, RandIP
+from scapy.all import IP, TCP, ICMP, send
 import time
 import random
 
@@ -40,14 +40,29 @@ class SyntheticTraffic(ModuleBase):
         traffic_type = self.options["TYPE"]["value"]
         duration = int(self.options["DURATION"]["value"])
 
-        if traffic_type == "normal":
-            self._send_normal(target, duration)
-        elif traffic_type == "portscan":
-            self._send_portscan(target, duration)
-        elif traffic_type == "flood":
-            self._send_flood(target, duration)
-        else:
-            print(f"[-] Unknown TYPE: {traffic_type}. Use normal | portscan | flood.")
+        if not target:
+            print("[-] TARGET is required.")
+            return
+
+        try:
+            if traffic_type == "normal":
+                self._send_normal(target, duration)
+            elif traffic_type == "portscan":
+                self._send_portscan(target, duration)
+            elif traffic_type == "flood":
+                self._send_flood(target, duration)
+            else:
+                print(f"[-] Unknown TYPE: {traffic_type}. Use normal | portscan | flood.")
+                return
+        except PermissionError:
+            print("[-] Permission denied. Run ANDS with sudo to send raw packets.")
+            return
+        except OSError as e:
+            print(f"[-] Network error: {e}")
+            return
+        except KeyboardInterrupt:
+            print("\n[*] Synthetic traffic interrupted by user.")
             return
 
         print(f"[+] Synthetic traffic complete.")
+        

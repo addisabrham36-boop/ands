@@ -1,0 +1,2 @@
+[console_scripts]
+ANDS-shell = core.console:main
