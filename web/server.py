@@ -228,6 +228,10 @@ def start_dashboard_server(session: Session, engine: LiveEngine, host="0.0.0.0",
     if actual_port != port:
         print(f"[*] Port {port} is occupied or reserved. Selected free port: {actual_port}")
 
+    # Auto-activate live engine on startup if not already running
+    if not engine.is_running():
+        engine.start()
+
     server = ThreadingHTTPServer((host, actual_port), DashboardHTTPHandler)
     url = f"http://localhost:{actual_port}"
 
