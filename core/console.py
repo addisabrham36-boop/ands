@@ -270,6 +270,63 @@ class ANDSConsole(cmd.Cmd):
             os.system("clear")
             colors.info("Exited Live Monitor HUD.")
 
+    def launch_all_unified(self, iface=None, port=8899):
+        """Launches all 3 components (Live Sentinel, Web Dashboard, Desktop App) in one synchronized session."""
+        c = colors.C
+        target_iface = iface or self.session.get_global("INTERFACE", "enp1s0")
+
+        # 1. Start Live Engine
+        if not self.engine.is_running():
+            ok = self.engine.start(interface=target_iface)
+            if ok:
+                colors.success(f"[1/3] Live Sentinel Packet Engine ACTIVE on {target_iface}")
+            else:
+                colors.warn(f"[1/3] Live Engine could not bind {target_iface} (run with sudo for raw packet sniffing).")
+        else:
+            colors.info(f"[1/3] Live Sentinel Packet Engine is already running on {self.engine.interface}")
+
+        # 2. Start Web Dashboard on a background thread
+        try:
+            from web.server import start_dashboard_server, find_available_port
+            actual_port = find_available_port("0.0.0.0", preferred_port=port)
+            self._dashboard_thread = threading.Thread(
+                target=lambda: start_dashboard_server(self.session, self.engine, host="0.0.0.0", port=actual_port, open_browser=False),
+                daemon=True,
+                name="ANDS-WebDashboard"
+            )
+            self._dashboard_thread.start()
+            time.sleep(0.4)
+            colors.success(f"[2/3] Cyber SOC Web Dashboard LIVE on http://localhost:{actual_port}")
+        except Exception as e:
+            colors.error(f"[2/3] Web Dashboard error: {e}")
+            actual_port = port
+
+        # 3. Launch Arch Linux Desktop App Window
+        try:
+            url = f"http://localhost:{actual_port}"
+            subprocess.Popen([
+                "bash", "-c",
+                f'if command -v flatpak >/dev/null 2>&1 && flatpak list | grep -q "com.brave.Browser"; then flatpak run com.brave.Browser --app="{url}" >/dev/null 2>&1 & elif command -v brave >/dev/null 2>&1; then brave --app="{url}" >/dev/null 2>&1 & elif command -v chromium >/dev/null 2>&1; then chromium --app="{url}" >/dev/null 2>&1 & elif command -v google-chrome >/dev/null 2>&1; then google-chrome --app="{url}" >/dev/null 2>&1 & else xdg-open "{url}" >/dev/null 2>&1 & fi'
+            ])
+            colors.success(f"[3/3] Arch Linux Desktop App window LAUNCHED")
+        except Exception as e:
+            colors.warn(f"[3/3] Could not open desktop window automatically: {e}")
+
+        # Unified Status Box
+        print(f"\n{c.BOLD}{c.WHITE}┌── ANDS UNIFIED 3-IN-1 SOC SENTINEL ACTIVE {'─'*27}┐{c.RESET}")
+        print(f"{c.GRAY}│{c.RESET}  {c.BOLD}{c.WHITE}✓ [1] Live Sentinel Sniffing:{c.RESET}  {c.WHITE}{target_iface}{c.RESET}")
+        print(f"{c.GRAY}│{c.RESET}  {c.BOLD}{c.WHITE}✓ [2] Cyber SOC Dashboard:{c.RESET}     {c.WHITE}http://localhost:{actual_port}{c.RESET}")
+        print(f"{c.GRAY}│{c.RESET}  {c.BOLD}{c.WHITE}✓ [3] Desktop Application:{c.RESET}     {c.WHITE}Standalone Window Open{c.RESET}")
+        print(f"{c.GRAY}│{c.RESET}  {c.BOLD}{c.WHITE}✓ [*] Shell Console:{c.RESET}           {c.WHITE}Interactive & Fully Synchronized{c.RESET}")
+        print(f"{c.GRAY}└{'─'*70}┘\n")
+
+    def do_all(self, arg):
+        """all [interface] [port]  — 1-Click Unified Launch: starts Live Engine, Web Dashboard, and Desktop App simultaneously"""
+        parts = arg.strip().split()
+        iface = parts[0] if parts and not parts[0].isdigit() else None
+        port = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else (int(parts[0]) if parts and parts[0].isdigit() else 8899)
+        self.launch_all_unified(iface=iface, port=port)
+
     def do_dashboard(self, arg):
         """dashboard [port]  — launch the SOC Analyst Web Dashboard server"""
         port = int(arg.strip()) if arg.strip().isdigit() else 8899
@@ -424,6 +481,9 @@ class ANDSConsole(cmd.Cmd):
         print(f"   search <term>       Search module catalog by keyword")
         print(f"   back                Deselect current module\n")
 
+        print(f" {c.BOLD}Unified 3-in-1 Launcher:{c.RESET}")
+        print(f"   all [iface] [port]  1-Click Launch: Live Sentinel + Web Dashboard + Desktop App\n")
+
         print(f" {c.BOLD}Live Sentinel & Monitoring:{c.RESET}")
         print(f"   live start [iface]  Start background packet detection engine")
         print(f"   live stop           Stop background packet engine")
@@ -458,6 +518,7 @@ class ANDSConsole(cmd.Cmd):
 def main():
     session = Session()
     engine = LiveEngine(session)
+    console = ANDSConsole(session, engine)
 
     if len(sys.argv) > 1:
         cmd_arg = sys.argv[1].lower()
@@ -470,11 +531,21 @@ def main():
         elif cmd_arg in ("live", "monitor"):
             iface = sys.argv[2] if len(sys.argv) > 2 else "enp1s0"
             engine.start(interface=iface)
-            console = ANDSConsole(session, engine)
             console._live_terminal_hud()
             return
+        elif cmd_arg in ("all", "--all", "-a", "unified", "start"):
+            iface = sys.argv[2] if len(sys.argv) > 2 and not sys.argv[2].isdigit() else None
+            port = int(sys.argv[3]) if len(sys.argv) > 3 and sys.argv[3].isdigit() else (int(sys.argv[2]) if len(sys.argv) > 2 and sys.argv[2].isdigit() else 8899)
+            print_banner(version="2.0.0", module_count=len(console.modules))
+            console.launch_all_unified(iface=iface, port=port)
+            try:
+                console.cmdloop()
+            except KeyboardInterrupt:
+                if engine.is_running():
+                    engine.stop()
+                print("\n[*] Force quit — exiting ANDS.")
+            return
 
-    console = ANDSConsole(session, engine)
     print_banner(version="2.0.0", module_count=len(console.modules))
     try:
         console.cmdloop()
