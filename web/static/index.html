@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ANDS Sentinel — Live SOC Analyst & Auditor Platform</title>
+    <!-- Modern Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="soc-layout">
+        <!-- Top Cyber Navbar -->
+        <header class="soc-header">
+            <div class="brand-group">
+                <div class="logo-shield">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        <path d="M12 8v4"/>
+                        <path d="M12 16h.01"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="brand-title">ANDS <span class="badge-version">v2.0 SOC</span></div>
+                    <div class="brand-subtitle">Anomaly-based Network Detection System</div>
+                </div>
+            </div>
+
+            <!-- Live Engine Status & Interface Selector -->
+            <div class="engine-controls">
+                <div class="control-item">
+                    <label for="ifaceSelect">NIC:</label>
+                    <select id="ifaceSelect" class="cyber-select">
+                        <option value="enp1s0" selected>enp1s0 (Active)</option>
+                        <option value="lo">lo (Loopback)</option>
+                        <option value="wlp2s0">wlp2s0</option>
+                        <option value="docker0">docker0</option>
+                    </select>
+                </div>
+                <button id="toggleLiveBtn" class="cyber-btn btn-live-start">
+                    <span class="live-indicator"></span>
+                    <span id="liveBtnText">START LIVE SENTINEL</span>
+                </button>
+            </div>
+
+            <!-- Quick Metrics Topbar -->
+            <div class="header-stats">
+                <div class="stat-pill">
+                    <span class="stat-label">PPS</span>
+                    <span class="stat-val" id="topPps">0.0</span>
+                </div>
+                <div class="stat-pill">
+                    <span class="stat-label">BANDWIDTH</span>
+                    <span class="stat-val" id="topKbps">0 KB/s</span>
+                </div>
+                <div class="stat-pill threat-pill">
+                    <span class="stat-label">THREATS</span>
+                    <span class="stat-val" id="topThreats">0</span>
+                </div>
+                <div class="stat-pill">
+                    <span class="stat-label">HOSTS</span>
+                    <span class="stat-val" id="topHosts">0</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Navigation Tabs -->
+        <nav class="soc-nav">
+            <button class="nav-tab active" data-tab="radarTab">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+                Threat Radar & Telemetry
+            </button>
+            <button class="nav-tab" data-tab="inventoryTab">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+                Asset Inventory & Auditor
+            </button>
+            <button class="nav-tab" data-tab="studioTab">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+                Module Studio & Payloads
+            </button>
+            <button class="nav-tab" data-tab="reportsTab">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                SOC Reports & SIEM
+            </button>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="soc-content">
+            <!-- TAB 1: THREAT RADAR -->
+            <section id="radarTab" class="tab-pane active">
+                <!-- KPI Dashboard Cards -->
+                <div class="kpi-grid">
+                    <div class="kpi-card card-cyan">
+                        <div class="kpi-label">Current Throughput</div>
+                        <div class="kpi-value" id="kpiPps">0.0 <span class="unit">pkt/s</span></div>
+                        <div class="kpi-sub" id="kpiKbps">0.0 KB/s</div>
+                    </div>
+                    <div class="kpi-card card-purple">
+                        <div class="kpi-label">Baseline Median (MAD)</div>
+                        <div class="kpi-value" id="kpiMedian">10.0 <span class="unit">pps</span></div>
+                        <div class="kpi-sub">Adaptive Exponential Moving Average</div>
+                    </div>
+                    <div class="kpi-card card-amber">
+                        <div class="kpi-label">Real-Time Anomaly Score</div>
+                        <div class="kpi-value" id="kpiZscore">0.00 <span class="unit">Mod-Z</span></div>
+                        <div class="kpi-sub" id="kpiZstatus">Status: Normal Baseline</div>
+                    </div>
+                    <div class="kpi-card card-rose">
+                        <div class="kpi-label">Active Threats (Critical / High)</div>
+                        <div class="kpi-value" id="kpiCritThreats">0 / 0</div>
+                        <div class="kpi-sub" id="kpiTotalThreats">0 Total Session Alerts</div>
+                    </div>
+                </div>
+
+                <!-- Live Charts Row -->
+                <div class="charts-row">
+                    <div class="chart-container-large">
+                        <div class="panel-header">
+                            <div class="panel-title">📈 Real-Time Traffic Volume & Statistical Anomaly Stream</div>
+                            <span class="live-tag">LIVE 1s WINDOWS</span>
+                        </div>
+                        <div class="chart-box">
+                            <canvas id="trafficChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container-small">
+                        <div class="panel-header">
+                            <div class="panel-title">🌐 Protocol Distribution</div>
+                        </div>
+                        <div class="chart-box">
+                            <canvas id="protoChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Threat Feed & Alerts Stream -->
+                <div class="panel alert-panel">
+                    <div class="panel-header">
+                        <div class="panel-title">🚨 Real-Time Security Alerts & Anomaly Feed</div>
+                        <div class="alert-actions">
+                            <div class="filter-btn-group">
+                                <button class="filter-btn active" data-filter="ALL">ALL</button>
+                                <button class="filter-btn" data-filter="CRITICAL">CRITICAL</button>
+                                <button class="filter-btn" data-filter="HIGH">HIGH</button>
+                                <button class="filter-btn" data-filter="MEDIUM">MED</button>
+                            </div>
+                            <input type="text" id="alertSearch" class="cyber-input" placeholder="Search alerts / IP / MITRE...">
+                            <button id="clearAlertsBtn" class="cyber-btn btn-small btn-secondary">Clear Alerts</button>
+                        </div>
+                    </div>
+                    <div class="alert-list-container" id="alertList">
+                        <div class="empty-state">No security alerts detected yet. ANDS Sentinel is watching the wire.</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: ASSET INVENTORY & AUDITOR -->
+            <section id="inventoryTab" class="tab-pane">
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">🗺️ Passive Network Asset Discovery & Host Fingerprints</div>
+                        <div class="panel-sub">Discovered via passive packet inspection without port scanning</div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="cyber-table">
+                            <thead>
+                                <tr>
+                                    <th>IP Address</th>
+                                    <th>MAC Address</th>
+                                    <th>Hardware Vendor</th>
+                                    <th>OS Fingerprint</th>
+                                    <th>Active Ports</th>
+                                    <th>Protocols</th>
+                                    <th>Threat Alerts</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventoryBody">
+                                <tr><td colspan="8" class="text-center">No active hosts detected on subnet yet.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Whitelist & Active Response Management -->
+                <div class="grid-2-col" style="margin-top: 20px;">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div class="panel-title">🛡️ False-Positive Suppression (Whitelist)</div>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                            <input type="text" id="newWhitelistIp" class="cyber-input" placeholder="Enter IP to whitelist (e.g. 192.168.1.50)">
+                            <button id="addWhitelistBtn" class="cyber-btn btn-small">Add IP</button>
+                        </div>
+                        <div id="whitelistTags" class="tag-cloud"></div>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div class="panel-title">🚫 Active Firewall Mitigations (Banned IPs)</div>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                            <input type="text" id="newBanIp" class="cyber-input" placeholder="Enter IP to block via iptables">
+                            <button id="manualBanBtn" class="cyber-btn btn-small btn-danger">Block IP</button>
+                        </div>
+                        <div id="bannedTags" class="tag-cloud"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 3: MODULE STUDIO & TEST PAYLOADS -->
+            <section id="studioTab" class="tab-pane">
+                <!-- Preset Test Simulation Quick Launch -->
+                <div class="simulation-banner">
+                    <div class="sim-title">⚡ Safe Attack & Test Simulation Payloads (One-Click Lab Validation):</div>
+                    <div class="sim-btn-group">
+                        <button class="sim-btn" data-mod="generate/synthetic" data-opts='{"TYPE":"portscan","DURATION":"8"}'>🚀 Test PortScan Attack</button>
+                        <button class="sim-btn" data-mod="generate/synthetic" data-opts='{"TYPE":"synflood","DURATION":"6","RATE":"80"}'>💥 Test SYN Flood</button>
+                        <button class="sim-btn" data-mod="generate/dns_payload" data-opts='{"COUNT":"8"}'>🕵️ Test DNS Exfiltration</button>
+                        <button class="sim-btn" data-mod="generate/c2_beacon_payload" data-opts='{"COUNT":"6"}'>📡 Test C2 Beaconing</button>
+                        <button class="sim-btn" data-mod="generate/ntp_monlist_payload" data-opts='{"COUNT":"4"}'>⏰ Test NTP Amplification</button>
+                        <button class="sim-btn" data-mod="generate/http_bench_payload" data-opts='{"DURATION":"6","RATE":"80"}'>🌐 Test HTTP Benchmark</button>
+                        <button class="sim-btn" data-mod="generate/ssdp_probe_payload" data-opts='{"COUNT":"4"}'>📡 Test SSDP Probe</button>
+                        <button class="sim-btn" data-mod="generate/fragmented_payload" data-opts='{"OVERLAP":"true"}'>🧩 Test Fragment Attack</button>
+                        <button class="sim-btn" data-mod="system/selftest" data-opts='{}'>🧪 Run Math Self-Test</button>
+                    </div>
+                </div>
+
+                <div class="grid-studio">
+                    <!-- Left: Module Catalog -->
+                    <div class="panel module-catalog">
+                        <div class="panel-header">
+                            <div class="panel-title">📦 Modules Catalog</div>
+                            <input type="text" id="moduleSearch" class="cyber-input" placeholder="Filter 31 modules...">
+                        </div>
+                        <div class="module-tree" id="moduleTree"></div>
+                    </div>
+
+                    <!-- Right: Module Configuration & Execution Console -->
+                    <div class="panel module-runner">
+                        <div class="panel-header">
+                            <div class="panel-title" id="selectedModTitle">Select a module to configure</div>
+                            <button id="executeModuleBtn" class="cyber-btn btn-primary">▶ RUN MODULE</button>
+                        </div>
+                        <div id="modDoc" class="mod-doc-box">Click on any module on the left to configure parameters and run.</div>
+                        <div id="modOptionsForm" class="options-form"></div>
+
+                        <!-- Live Terminal Console Log -->
+                        <div class="terminal-box">
+                            <div class="terminal-bar">
+                                <span class="term-dot dot-red"></span>
+                                <span class="term-dot dot-yellow"></span>
+                                <span class="term-dot dot-green"></span>
+                                <span class="term-title">ANDS Interactive Output Terminal</span>
+                                <button id="clearTermBtn" class="btn-term-clear">Clear</button>
+                            </div>
+                            <pre id="terminalOutput" class="terminal-code">ands > Ready for execution.</pre>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 4: SOC REPORTS & SIEM -->
+            <section id="reportsTab" class="tab-pane">
+                <div class="grid-2-col">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div class="panel-title">📄 Executive SOC Incident Report Generation</div>
+                        </div>
+                        <p class="panel-text">Generate a formal SOC incident and audit report summarizing threat findings, MITRE ATT&CK technique classifications, affected hosts, and mitigation advice.</p>
+                        <div style="display: flex; gap: 15px; margin-top: 20px;">
+                            <button id="genHtmlReportBtn" class="cyber-btn btn-primary">Generate HTML Report</button>
+                            <button id="genPdfReportBtn" class="cyber-btn btn-secondary">Generate PDF Report</button>
+                        </div>
+                        <div id="reportStatusBox" style="margin-top: 15px;"></div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div class="panel-title">🔌 SIEM Threat Feed & Log Forwarding Export</div>
+                        </div>
+                        <p class="panel-text">Export recorded alerts and network telemetry into SIEM-compatible formats (JSONL, JSON, Common Event Format - CEF) for ingestion into Splunk, Elastic, or Wazuh.</p>
+                        <div style="display: flex; gap: 10px; margin-top: 20px;">
+                            <button class="cyber-btn btn-small export-siem-btn" data-fmt="jsonl">Export JSONL</button>
+                            <button class="cyber-btn btn-small export-siem-btn" data-fmt="cef">Export CEF</button>
+                            <button class="cyber-btn btn-small export-siem-btn" data-fmt="json">Export JSON</button>
+                        </div>
+                        <div id="siemStatusBox" style="margin-top: 15px;"></div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Alert Detail Modal Drawer -->
+    <div id="alertModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title" id="modalAlertTitle">Threat Details</div>
+                <button id="closeModalBtn" class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body" id="modalAlertBody"></div>
+            <div class="modal-footer">
+                <button id="modalBanBtn" class="cyber-btn btn-danger">1-Click Ban IP (iptables)</button>
+                <button id="modalWhitelistBtn" class="cyber-btn btn-secondary">Whitelist Source</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

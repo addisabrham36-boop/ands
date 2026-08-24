@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=ANDS SOC Sentinel
+Comment=Anomaly-based Network Detection System & Security Auditor
+Exec=/home/abrham/ands/bin/ands-app
+Icon=/home/abrham/ands/data/ands-icon.svg
+Terminal=false
+Type=Application
+Categories=Network;Security;System;Monitor;
+Keywords=soc;cybersecurity;network;detection;anomaly;sentinel;scapy;firewall;
+StartupNotify=true

@@ -1,7 +1,13 @@
 venv/
 __pycache__/
 *.pyc
-data/
+*.egg-info/
+build/
+dist/
+.pytest_cache/
 logs/
 reports/
+reports_old/
 *.pcap
+data/baseline_profiles/
+data/captures/

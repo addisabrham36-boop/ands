@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# ANDS Sentinel — Arch Linux SOC Analyst Desktop Application Launcher
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+PORT=8899
+URL="http://localhost:${PORT}"
+
+# Ensure python venv or system python is selected
+if [ -f "$SCRIPT_DIR/venv/bin/python" ]; then
+    PYTHON_BIN="$SCRIPT_DIR/venv/bin/python"
+else
+    PYTHON_BIN="python3"
+fi
+
+# Check if dashboard server is already running
+if ! curl -s -m 1 "$URL/api/stats" >/dev/null 2>&1; then
+    echo "[*] Starting ANDS Sentinel background engine & dashboard on $URL..."
+    # Start the daemon
+    nohup "$PYTHON_BIN" "$SCRIPT_DIR/ands.py" dashboard "$PORT" >/tmp/ands_dashboard.log 2>&1 &
+    sleep 1.2
+fi
+
+echo "[+] Launching ANDS Sentinel Desktop Window..."
+
+# Try launching dedicated app window mode
+if command -v flatpak >/dev/null 2>&1 && flatpak list | grep -q "com.brave.Browser"; then
+    flatpak run com.brave.Browser --app="$URL" >/dev/null 2>&1 &
+elif command -v brave >/dev/null 2>&1; then
+    brave --app="$URL" >/dev/null 2>&1 &
+elif command -v chromium >/dev/null 2>&1; then
+    chromium --app="$URL" >/dev/null 2>&1 &
+elif command -v google-chrome >/dev/null 2>&1; then
+    google-chrome --app="$URL" >/dev/null 2>&1 &
+else
+    xdg-open "$URL" >/dev/null 2>&1 &
+fi

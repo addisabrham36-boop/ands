@@ -1,7 +1,7 @@
 [project]
 name = "ands"
-version = "1.0.0"
-description = "ANDS - Anomaly-based Network Detection System"
+version = "2.0.0"
+description = "ANDS - Live SOC Analyst & Anomaly-based Network Detection System"
 requires-python = ">=3.10"
 dependencies = [
     "scapy>=2.5.0",
@@ -13,9 +13,23 @@ dependencies = [
 
 [project.scripts]
 ANDS-shell = "core.console:main"
+ands = "core.console:main"
+ands-dashboard = "core.console:main"
 
 [tool.setuptools]
-packages = ["core", "modules", "modules.capture", "modules.detect", "modules.generate", "modules.report", "modules.system"]
+packages = [
+    "core",
+    "modules",
+    "modules.audit",
+    "modules.capture",
+    "modules.detect",
+    "modules.generate",
+    "modules.report",
+    "modules.response",
+    "modules.system",
+    "modules.custom",
+    "web"
+]
 
 [build-system]
 requires = ["setuptools>=61.0"]

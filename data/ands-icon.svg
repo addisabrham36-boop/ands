@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a0f1d"/>
+      <stop offset="100%" stop-color="#111827"/>
+    </linearGradient>
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f0ff"/>
+      <stop offset="50%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#a855f7"/>
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="12" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Background Hex/Circle Card -->
+  <rect width="512" height="512" rx="110" fill="url(#bgGrad)"/>
+  <rect width="504" height="504" x="4" y="4" rx="106" fill="none" stroke="rgba(0, 240, 255, 0.3)" stroke-width="6"/>
+
+  <!-- Cyber Radar Rings -->
+  <circle cx="256" cy="256" r="180" fill="none" stroke="rgba(56, 189, 248, 0.15)" stroke-width="2" stroke-dasharray="8 6"/>
+  <circle cx="256" cy="256" r="130" fill="none" stroke="rgba(56, 189, 248, 0.2)" stroke-width="2"/>
+  <circle cx="256" cy="256" r="80" fill="none" stroke="rgba(56, 189, 248, 0.25)" stroke-width="2"/>
+
+  <!-- Radar Sweep Line -->
+  <line x1="256" y1="256" x2="380" y2="132" stroke="#00f0ff" stroke-width="3" stroke-linecap="round" filter="url(#glow)"/>
+
+  <!-- Main Shield -->
+  <path d="M256 90 L380 140 V250 C380 340 256 410 256 410 C256 410 132 340 132 250 V140 Z" fill="none" stroke="url(#shieldGrad)" stroke-width="18" stroke-linejoin="round" filter="url(#glow)"/>
+
+  <!-- Shield Core Circuit -->
+  <path d="M256 160 V330 M200 230 H312 M215 285 L297 285 M225 190 L287 190" stroke="#00f0ff" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="256" cy="230" r="14" fill="#a855f7" stroke="#00f0ff" stroke-width="4"/>
+  <circle cx="256" cy="160" r="8" fill="#00f0ff"/>
+  <circle cx="256" cy="330" r="8" fill="#00f0ff"/>
+  <circle cx="200" cy="230" r="6" fill="#00f0ff"/>
+  <circle cx="312" cy="230" r="6" fill="#00f0ff"/>
+</svg>
