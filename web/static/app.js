@@ -385,10 +385,32 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // LOAD MODULES
     async function loadModules() {
-        const res = await fetch("/api/modules");
-        const data = await res.json();
-        modulesData = data.categories || {};
-        renderModuleTree();
+        try {
+            const res = await fetch("/api/modules");
+            const data = await res.json();
+            modulesData = data.categories || {};
+            const total = data.total_modules || 75;
+            
+            // Update tab label with actual count
+            const studioTabBtn = document.querySelector('[data-tab="studioTab"]');
+            if (studioTabBtn) {
+                studioTabBtn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg> Module Studio & Payloads (${total})`;
+            }
+
+            renderModuleTree();
+
+            // Auto-select first module if none active
+            if (!activeModuleKey) {
+                for (const mods of Object.values(modulesData)) {
+                    if (mods.length > 0) {
+                        selectModule(mods[0].path);
+                        break;
+                    }
+                }
+            }
+        } catch (e) {
+            console.error("Failed to load modules:", e);
+        }
     }
 
     function renderModuleTree() {

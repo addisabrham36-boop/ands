@@ -1,15 +1,27 @@
 import importlib.util
 import inspect
 import os
+import sys
 from typing import Dict, Type
 from core.module_base import ModuleBase
 
+# Always guarantee project root is in sys.path
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
 
-def load_all_modules(base_dir: str = "modules") -> Dict[str, Type[ModuleBase]]:
+
+def load_all_modules(base_dir: str = None) -> Dict[str, Type[ModuleBase]]:
     """
     Recursively scans the modules directory and subpackages,
     dynamically loading all ModuleBase subclasses and creating friendly aliases.
+    Always resolves relative paths against the project root directory.
     """
+    if base_dir is None:
+        base_dir = os.path.join(PROJECT_ROOT, "modules")
+    elif not os.path.isabs(base_dir):
+        base_dir = os.path.join(PROJECT_ROOT, base_dir)
+
     discovered: Dict[str, Type[ModuleBase]] = {}
     if not os.path.isdir(base_dir):
         return discovered
@@ -34,7 +46,8 @@ def load_all_modules(base_dir: str = "modules") -> Dict[str, Type[ModuleBase]]:
             mod = importlib.util.module_from_spec(spec)
             try:
                 spec.loader.exec_module(mod)
-            except Exception:
+            except Exception as e:
+                # Silently ignore if load fails
                 continue
 
             for name, obj in inspect.getmembers(mod, inspect.isclass):
@@ -65,6 +78,8 @@ def load_all_modules(base_dir: str = "modules") -> Dict[str, Type[ModuleBase]]:
     return discovered
 
 
-def load_custom_modules(directory: str = "modules/custom") -> Dict[str, Type[ModuleBase]]:
+def load_custom_modules(directory: str = None) -> Dict[str, Type[ModuleBase]]:
     """Compatibility alias for custom modules directory."""
+    if directory is None:
+        directory = os.path.join(PROJECT_ROOT, "modules", "custom")
     return load_all_modules()

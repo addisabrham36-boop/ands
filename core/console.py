@@ -94,18 +94,21 @@ class ANDSConsole(cmd.Cmd):
             else:
                 colors.error("No module selected. Use 'use <module>' first.")
 
-        elif arg == "modules":
-            print(f"\n{c.BOLD}{c.WHITE}┌── ANDS MODULE REGISTRY ({len(self.modules)} Loaded Modules/Aliases) {'─'*25}┐{c.RESET}")
-            print(f"{c.GRAY}│ {'#':<3} {'MODULE PATH':<34} {'CATEGORY':<14} │{c.RESET}")
-            print(f"{c.GRAY}├{'─'*58}┤{c.RESET}")
+        elif arg in ("modules", "all_modules"):
+            print(f"\n{c.BOLD}{c.WHITE}┌── ANDS MODULE REGISTRY ({len(self.modules)} Loaded Modules & Aliases) {'─'*27}┐{c.RESET}")
+            print(f"{c.GRAY}│ {'#':<3} {'MODULE PATH':<28} {'CATEGORY':<10} {'DESCRIPTION':<38} │{c.RESET}")
+            print(f"{c.GRAY}├{'─'*85}┤{c.RESET}")
             categories = ["detect", "audit", "capture", "generate", "response", "report", "system", "custom"]
             idx = 1
             for cat in categories:
                 cat_mods = sorted([m for m in self.modules.keys() if m.startswith(f"{cat}/") and not m.endswith("_detect") and not m.endswith("_audit") and not m.endswith("_payload") and not m.endswith("_anomaly")])
                 for m in cat_mods:
-                    print(f"{c.GRAY}│{c.RESET} {idx:<3} {c.WHITE}{m:<34}{c.RESET} {c.SILVER}{cat.upper():<14}{c.RESET} {c.GRAY}│{c.RESET}")
+                    cls = self.modules[m]
+                    doc = (cls.__doc__ or "").strip().split("\n")[0][:36]
+                    print(f"{c.GRAY}│{c.RESET} {idx:<3} {c.WHITE}{m:<28}{c.RESET} {c.SILVER}{cat.upper():<10}{c.RESET} {c.GRAY}{doc:<38}{c.RESET} {c.GRAY}│{c.RESET}")
                     idx += 1
-            print(f"{c.GRAY}└{'─'*58}┘{c.RESET}\n")
+            print(f"{c.GRAY}└{'─'*85}┘{c.RESET}\n")
+            print(f"{c.GRAY}  Use {c.WHITE}'use <module_path>'{c.GRAY} to load any module (e.g. {c.WHITE}'use detect/portscan'{c.GRAY}){c.RESET}\n")
 
         elif arg == "alerts":
             self.do_alerts("")
@@ -121,6 +124,10 @@ class ANDSConsole(cmd.Cmd):
 
         else:
             colors.error("Usage: show [options|modules|alerts|inventory|stats|jobs]")
+
+    def do_modules(self, arg):
+        """modules  — list all available detection, audit, capture & payload modules"""
+        self.do_show("modules")
 
     def do_set(self, arg):
         """set <option> <value>  — configure active module option"""
