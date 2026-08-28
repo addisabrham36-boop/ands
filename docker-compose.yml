@@ -1,0 +1,22 @@
+version: "3.8"
+
+services:
+  ands-sentinel:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ands-sentinel
+    restart: unless-stopped
+    # host network mode allows direct raw socket sniffing on host network adapters
+    network_mode: "host"
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    environment:
+      - ANDS_INTERFACE=eth0
+      - ANDS_PORT=8899
+    volumes:
+      - ./reports:/app/reports
+      - ./data:/app/data
+      - ./logs:/app/logs
+    command: ["dashboard", "8899"]

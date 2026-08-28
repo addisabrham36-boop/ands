@@ -1,130 +1,163 @@
-# ANDS — Live SOC Analyst & Network Anomaly Detection System (v2.0)
+# 🛡️ ANDS SENTINEL v2.0
+### **Anomaly-based Network Detection System & Real-Time SOC Analyst Suite**
 
-ANDS (**Anomaly-based Network Detection System**) is a real-time cybersecurity defense, intrusion detection, and auditing platform for Linux. Designed with both a Metasploit-style interactive console and a sleek Monochrome Cyber SOC Analyst Web & Desktop Dashboard, ANDS pairs statistical baseline anomaly detection (standard Z-score, robust Median Absolute Deviation - MAD, and adaptive Exponential Moving Averages - EMA) with signature and behavioral detection across 40+ specialized modules and simulation payloads.
-
----
-
-## Key Features
-
-- **Live Continuous Packet Sentinel**: Background packet sniffer and stream dispatcher with zero packet duplication.
-- **False-Positive Reduction Engine**: 
-  - Robust **Median Absolute Deviation (MAD)** and Modified Z-Scores ($M_i = 0.6745 \cdot (x - \text{med}) / \text{MAD}$) to withstand benign burst noise.
-  - Stateful **TCP 3-Way Handshake Tracking**: distinguishes legitimate high-throughput connections from port scans and SYN floods.
-  - Whitelist suppression and confidence rating (0–100%).
-- **Monochrome Minimalist Cyber Web Dashboard & Arch Linux Desktop App**:
-  - High-contrast black and white styling, real-time PPS & bandwidth charts, live anomaly meters, protocol radar, interactive alert inspection, and 1-Click active firewall IP bans.
-  - Native Arch Linux `.desktop` launcher and standalone app window support.
-- **Suite of 40+ Defense, Audit, Capture, Simulation, & Response Modules**:
-  - Port scans, SYN floods, ARP spoofing, DNS tunneling, C2 beaconing, credential brute-force, web threats (SQLi/XSS), NTP amplification, SSDP reflection, DNS amplification, SMB exploit probes, SNMP guessing, IP fragmentation / Teardrop, cleartext credential sniffing, and more.
+[![License: MIT](https://img.shields.io/badge/License-MIT-white.svg?style=for-the-badge&logo=opensourceinitiative&logoColor=white)](LICENSE)
+[![Python Version](https://img.shields.io/badge/Python-3.10%2B-black.svg?style=for-the-badge&logo=python&logoColor=white)](pyproject.toml)
+[![Docker](https://img.shields.io/badge/Docker-Ready-0db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)](docker-compose.yml)
+[![Linux Platform](https://img.shields.io/badge/Platform-Arch%20%7C%20Debian%20%7C%20Kali%20%7C%20Fedora-black.svg?style=for-the-badge&logo=linux&logoColor=white)](install.sh)
+[![Modules](https://img.shields.io/badge/Modules-75%2B%20Loaded-success.svg?style=for-the-badge)](modules/)
 
 ---
 
-## Requirements
+## ⚡ Overview
 
-- **OS**: Linux (Optimized for Arch Linux, Ubuntu, Debian, Fedora)
-- **Python**: 3.10+
-- **Privileges**: Root/sudo access (required for raw packet sniffing and `iptables` active response)
-- **Dependencies**: `scapy`, `numpy`, `colorama`, `reportlab`, `psutil`
+**ANDS (Anomaly-based Network Detection System)** is a modular, high-performance network security telemetry and threat-hunting framework built for **SOC Analysts, Network Auditors, and Incident Responders**.
+
+It combines a real-time statistical anomaly detection engine (using **Median Absolute Deviation** and **Modified Z-Scores** to eliminate false positives) with a **Monochrome Black & White SOC Dashboard**, a dedicated **Arch Linux Desktop App**, and an extensible suite of **75+ defensive detection, auditing, capture, simulation, and active-response modules**.
 
 ---
 
-## Installation
+## 🌟 Key Features
+
+- 🛰️ **Live Wire Packet Sentinel**: Continuous raw socket sniffing with Scapy, sliding-window throughput metering, and instantaneous threat classification.
+- 📉 **Adaptive False-Positive Elimination**: Robust outlier detection utilizing Median Absolute Deviation (MAD) rather than fragile mean/stdev averages.
+- 🎛️ **75+ Primary Modules & Payloads**: Dedicated detection sentinels, compliance auditors, packet profilers, safe lab test simulators, and automated response mitigators.
+- 🖥️ **Monochromatic Cyber SOC Dashboard**: High-contrast, dark-graphite web interface with live streaming PPS line charts, protocol distribution doughnuts, dynamic alert feeds, and interactive module runners.
+- 🪟 **Arch Linux Desktop Application**: Standalone GUI desktop window integrating terminal control and telemetry streams.
+- 🚀 **1-Click 3-in-1 Unified Launcher**: Run `sudo ANDS-shell all` to launch the background engine, web server, desktop app, and interactive CLI simultaneously.
+- 🐳 **Docker & Container Ready**: Run everywhere with Docker and Docker Compose using host network packet capture.
+- 🔒 **Active Response & Containment**: Real-time Netfilter/iptables blocking and Layer-2 MAC address isolation.
+
+---
+
+## 🚀 Quick Start & Installation
+
+### Option 1: Universal 1-Click Installer (Recommended for Linux / Arch)
+
+Clone the repository and run the automated installer:
 
 ```bash
 git clone https://github.com/addisabrham36-boop/ands.git
 cd ands
+sudo ./install.sh
+```
+
+This will automatically:
+1. Install all necessary system dependencies (`libpcap`, `tcpdump`, `iptables`, `gcc`).
+2. Provision an isolated virtual environment with all required Python packages.
+3. Link the global `ANDS-shell` binary into `/usr/local/bin`.
+4. Install the desktop launcher shortcut in your application menu.
+
+---
+
+### Option 2: Docker & Docker Compose
+
+Deploy the complete ANDS SOC Sentinel in seconds without installing local Python packages:
+
+```bash
+git clone https://github.com/addisabrham36-boop/ands.git
+cd ands
+docker compose up -d
+```
+
+> **Note**: Docker runs in `network_mode: "host"` with `NET_ADMIN` and `NET_RAW` capabilities to enable direct raw socket sniffing on host network interfaces.
+
+Access the SOC Dashboard at **`http://localhost:8899`**.
+
+To run custom commands inside Docker:
+```bash
+docker run --rm -it --net=host --cap-add=NET_ADMIN --cap-add=NET_RAW ands-sentinel live
+```
+
+---
+
+### Option 3: Manual Installation
+
+```bash
+git clone https://github.com/addisabrham36-boop/ands.git
+cd ands
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
 pip install -e .
 ```
 
-### Launch the Arch Linux Desktop Application:
-```bash
-./bin/ands-app
-```
-*(Also available directly in your GNOME/KDE/XFCE Application Menu as **ANDS SOC Sentinel**)*
-
 ---
 
-## Usage
+## 💻 Usage & Commands
 
-### 1. Launching the Interactive Shell Console:
+### 1. Launch All (3-in-1 Unified Suite)
+Spawns the background Live Sentinel Engine, spins up the Web SOC Dashboard on port `8899`, opens the Desktop App window, and drops into the interactive console:
 ```bash
-sudo python ands.py
-# or
+sudo ANDS-shell all
+```
+
+### 2. Interactive Console
+Launch the interactive Metasploit-style shell:
+```bash
 sudo ANDS-shell
 ```
+Inside the shell:
+```text
+ands ❯ modules                      # View all 75 modules & descriptions
+ands ❯ use detect/portscan          # Select a module
+ands (detect/portscan) ❯ show options
+ands (detect/portscan) ❯ set DURATION 15
+ands (detect/portscan) ❯ run         # Execute active module
+ands (detect/portscan) ❯ live view   # Open full-screen dynamic monitoring HUD
+```
+
+### 3. Dedicated Terminal Live Monitoring HUD
+Inspect throughput, baseline PPS, protocol distribution bars, and live threats updating every second:
+```bash
+sudo ANDS-shell live
+```
+
+### 4. Headless SOC Web Server
+Run the web dashboard as a standalone service (default port 8899, with auto port-fallback avoiding 5000, 8000, 8080):
+```bash
+sudo ANDS-shell dashboard 8899
+```
+
+---
+
+## 📦 Complete 75-Module Catalog
+
+| Category | Modules | Description |
+|---|---|---|
+| **DETECT** (32) | `arpspoof`, `beaconing`, `bruteforce`, `covert_icmp`, `dhcp_rogue`, `dns_amplification`, `dns_dga`, `dns_tunnel`, `dns_zone_transfer`, `ftp_bruteforce`, `icmp_tunnel`, `ip_fragmentation`, `ipv6_ra_flood`, `land_smurf`, `ldap_anonymous`, `llmnr_nbtns_poison`, `memcached_amplification`, `ntp_amplification`, `packet_fuzzing`, `path_traversal`, `portscan`, `rdp_bluekeep`, `sip_invite_flood`, `slowloris`, `snmp_bruteforce`, `sql_injection`, `ssdp_amplification`, `ssh_bruteforce`, `synflood`, `threat_intel`, `webshell_probe`, `zscore` | Real-time threat detection sentinels covering Layer 2 through Layer 7 attacks, volumetric DDoS, C2 beacons, and malware queries. |
+| **AUDIT** (10) | `cleartext_creds`, `dns_resolver`, `http_methods`, `mac_spoofing`, `network_inventory`, `rogue_dns`, `smtp_open_relay`, `ssl_tls`, `telnet_insecure`, `weak_cipher` | Passive compliance auditors identifying unencrypted protocols, dangerous HTTP methods, weak cipher suites, and asset inventories. |
+| **CAPTURE** (6) | `bandwidth_meter`, `baseline`, `flow_analyzer`, `live_stream`, `protocol_profiler`, `traffic_baseline` | 5-tuple NetFlow analyzers, bandwidth meters, continuous packet streams, and L3/L4 protocol distribution profilers. |
+| **GENERATE** (17)| `arp`, `c2_beacon`, `dga_test`, `dns`, `fragmented`, `http_bench`, `icmp_flood`, `memcached_test`, `ntp_monlist`, `path_traversal`, `slowloris`, `snmp_test`, `sql_injection`, `ssdp_probe`, `synthetic`, `telnet_test`, `xss_test` | Benign lab test payload generators for validating SOC detection rules and training security auditors. |
+| **RESPONSE** (3) | `iptables_block`, `mac_blacklist`, `pcap_extractor` | Active response Linux Netfilter / iptables blocking, Layer-2 MAC isolation, and incident PCAP evidence extraction. |
+| **REPORT** (4) | `compliance_report`, `generate_report`, `json_export`, `report` | CIS Benchmark / PCI-DSS compliance audits, PDF/HTML executive incident reports, and SIEM JSON threat feeds. |
+| **SYSTEM** (3) | `interface_info`, `selftest`, `example_check` | Network adapter diagnostics, mathematical anomaly engine verification, and custom module template. |
+
+---
+
+## 🏗️ Architecture
 
 ```text
-ands ❯ live start enp1s0
-[✓] Live Detection Engine started on interface: enp1s0
-
-ands ❯ show modules
-ands ❯ use detect/portscan
-ands (detect/portscan) ❯ show options
-ands (detect/portscan) ❯ set DURATION 30
-ands (detect/portscan) ❯ run
+┌────────────────────────────────────────────────────────────────────────┐
+│                          ANDS SENTINEL v2.0                            │
+└────────────────────────────────────────────────────────────────────────┘
+                                    │
+         ┌──────────────────────────┼──────────────────────────┐
+         ▼                          ▼                          ▼
+┌──────────────────┐       ┌──────────────────┐       ┌──────────────────┐
+│  LIVE SENTINEL   │       │  MONOCHROME SOC  │       │ 75+ CYBER MODULE │
+│  SNIFFING ENGINE │       │  DASHBOARD & APP │       │  STUDIO SUITE    │
+└──────────────────┘       └──────────────────┘       └──────────────────┘
+  • Scapy Raw Socket         • Pure JS & SSE Stream     • 32 Detectors
+  • 1s Sliding Window        • Monochromatic Charts     • 10 Auditors
+  • MAD & Mod-Z Score        • 1-Click Test Buttons     • 17 Simulators
+  • BPF Packet Filter        • REST API Backend         • Active Mitigation
 ```
-
-### 2. Launching the Web SOC Dashboard:
-```bash
-sudo python ands.py dashboard 8899
-```
-Then navigate to `http://localhost:8899` in your browser.
 
 ---
 
-## Module Catalog (40+ Modules & Payloads)
+## 📄 License
 
-| Category | Module | Description | MITRE ATT&CK |
-|---|---|---|---|
-| **Detect** | `detect/portscan` | Multi-mode scan detection (SYN, FIN, NULL, XMAS, UDP, sweeps) with handshake validation | T1046 |
-| **Detect** | `detect/zscore` | Live sliding-window Z-Score & MAD statistical volumetric anomaly detection | T1498 |
-| **Detect** | `detect/synflood` | Half-open TCP connection tracker and SYN/ACK ratio flood detector | T1498.001 |
-| **Detect** | `detect/arpspoof` | Real-time ARP poisoning, duplicate IP claims, and gateway MAC drift detector | T1557.002 |
-| **Detect** | `detect/dns_tunnel` | Shannon entropy & high-frequency TXT/NULL record DNS tunneling detector | T1071.004 |
-| **Detect** | `detect/beaconing` | Periodic C2 heartbeat & timing jitter coefficient-of-variation analyzer | T1071 |
-| **Detect** | `detect/bruteforce` | Rapid authentication attempt detector for SSH, FTP, Telnet, RDP, and HTTP | T1110.001 |
-| **Detect** | `detect/icmp_tunnel` | Oversized payload entropy & Ping of Death / ICMP flood detector | T1095 / T1498 |
-| **Detect** | `detect/http_anomaly`| Web threat inspection (SQL Injection, XSS, Path Traversal, Web Shells) | T1190 / T1059 |
-| **Detect** | `detect/slowloris` | Low-and-slow HTTP connection starvation and socket exhaustion detector | T1499.003 |
-| **Detect** | `detect/land_smurf` | Malformed Land Attack (src == dst) & Smurf broadcast amplification detector | T1498.001 |
-| **Detect** | `detect/dhcp_rogue` | Rogue / unauthorized DHCP server Offer/ACK spoofer detector | T1557 |
-| **Detect** | `detect/threat_intel`| Threat intelligence IOC blacklist & malicious IP feed matcher | T1071 |
-| **Detect** | `detect/ntp_amplification`| NTP monlist (0x2a) and reflection DDoS flood detector | T1498.002 |
-| **Detect** | `detect/ssdp_amplification`| SSDP M-SEARCH UPnP reflection DDoS probe detector | T1498.002 |
-| **Detect** | `detect/dns_amplification`| DNS ANY query and EDNS0 oversized response reflection detector | T1498.002 |
-| **Detect** | `detect/smb_anomaly`| SMBv1 dialect negotiation & EternalBlue (MS17-010) exploit probe detector | T1210 |
-| **Detect** | `detect/snmp_bruteforce`| SNMP community string guessing & enumeration detector | T1110.001 |
-| **Detect** | `detect/ip_fragmentation`| Teardrop overlapping IP offset and fragment flood detector | T1498.001 |
-| **Detect** | `detect/packet_fuzzing`| Malformed packet headers, illegal TCP flags, and zero TTL fuzzer detector | T1499 |
-| **Audit** | `audit/cleartext_creds`| Passive packet sniffer for plaintext credentials (HTTP Basic, FTP, Telnet, POP3, IMAP) | T1552 |
-| **Audit** | `audit/network_inventory`| Passive subnet asset discovery, MAC vendor lookup, and OS fingerprinting | T1046 |
-| **Audit** | `audit/ssl_tls` | Cryptographic auditor detecting deprecated SSLv2, SSLv3, TLS 1.0, and TLS 1.1 | T1557 |
-| **Audit** | `audit/dns_resolver` | Outbound DNS policy auditor identifying unauthorized shadow DNS resolvers | T1071.004 |
-| **Capture** | `capture/traffic_baseline`| Multi-feature vector baseline profiler (packet rate, byte rate, protocol distribution) | — |
-| **Capture** | `capture/live_stream` | Continuous rolling PCAP ring-buffer capture for incident forensics | — |
-| **Capture** | `capture/flow_analyzer`| NetFlow / IPFIX-style 5-tuple flow aggregator & Top Talkers analyzer | — |
-| **Generate** | `generate/synthetic` | Multi-profile traffic generator (Normal, Port Scan, SYN Flood, UDP, ICMP Spike) | — |
-| **Generate** | `generate/dns_payload`| Generates high-entropy simulated DNS tunneling queries for lab validation | — |
-| **Generate** | `generate/arp_payload`| Generates simulated gratuitous ARP packets for testing ARP defenses | — |
-| **Generate** | `generate/c2_beacon_payload`| Generates periodic beacon heartbeats with configurable timing jitter | — |
-| **Generate** | `generate/ntp_monlist_payload`| Generates safe NTP monlist queries for reflection rule validation | — |
-| **Generate** | `generate/http_bench_payload`| High-throughput HTTP GET benchmark burst simulator | — |
-| **Generate** | `generate/ssdp_probe_payload`| SSDP M-SEARCH discovery query probe simulator | — |
-| **Generate** | `generate/snmp_test_payload`| Generates SNMP community test queries for sentinel validation | — |
-| **Generate** | `generate/fragmented_payload`| Emits overlapping fragmented IP packets for Teardrop defense testing | — |
-| **Response** | `response/iptables_block`| Active response firewall manager: 1-click ban/unban malicious IPs via iptables | — |
-| **Response** | `response/pcap_extractor`| Extracts targeted forensic PCAP slices around incident timestamps for Wireshark | — |
-| **Report** | `report/generate_report`| Generates executive HTML & PDF incident reports with MITRE ATT&CK breakdown | — |
-| **Report** | `report/json_export` | Exports session alerts to SIEM-ready JSONL, JSON, and CEF formats | — |
-| **System** | `system/selftest` | Automated mathematical and algorithmic self-test suite | — |
-| **System** | `system/interface_info`| Network adapter diagnostics, MTU, duplex, and throughput inspector | — |
-| **Custom** | `custom/*` | Auto-discovers any custom `ModuleBase` subclass placed in `modules/custom/` | — |
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
 
----
-
-## Author & Credits
-
-**Abrham Addis Tefera**  
-Bahir Dar University / INSA Cybersecurity Program  
-GitHub: [@addisabrham36-boop](https://github.com/addisabrham36-boop)  
-Bahir Dar, Ethiopia — 2026
+Developed with 🛡️ by **Addis Abrham** for cybersecurity auditors, SOC analysts, and network defense practitioners.

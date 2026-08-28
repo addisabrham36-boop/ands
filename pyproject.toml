@@ -2,7 +2,27 @@
 name = "ands"
 version = "2.0.0"
 description = "ANDS - Live SOC Analyst & Anomaly-based Network Detection System"
+readme = "README.md"
+authors = [{ name = "Addis Abrham" }]
+license = { text = "MIT" }
 requires-python = ">=3.10"
+keywords = ["soc", "ids", "nids", "network-security", "anomaly-detection", "packet-sniffer", "scapy", "threat-hunting"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Environment :: Web Environment",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Security",
+    "Topic :: System :: Networking :: Monitoring",
+]
 dependencies = [
     "scapy>=2.5.0",
     "numpy>=1.24.0",
@@ -30,6 +50,9 @@ packages = [
     "modules.custom",
     "web"
 ]
+
+[tool.setuptools.package-data]
+web = ["static/*"]
 
 [build-system]
 requires = ["setuptools>=61.0"]
