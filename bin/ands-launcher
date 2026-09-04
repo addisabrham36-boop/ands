@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# ANDS SENTINEL v2.0 - Universal CLI / App Launcher
+# Automatically resolves project location across /home/abrham/Projects/ands & /home/abrham/ands
+# ==============================================================================
+
+POSSIBLE_DIRS=(
+    "/home/abrham/Projects/ands"
+    "/home/abrham/ands"
+    "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." 2>/dev/null && pwd)"
+    "$(pwd)"
+)
+
+PROJECT_DIR=""
+for d in "${POSSIBLE_DIRS[@]}"; do
+    if [ -f "$d/ands.py" ] && [ -d "$d/core" ]; then
+        PROJECT_DIR="$d"
+        break
+    fi
+done
+
+if [ -z "$PROJECT_DIR" ]; then
+    echo "[-] Error: Could not locate ANDS installation directory." >&2
+    exit 1
+fi
+
+PYTHON_BIN="python3"
+if [ -f "$PROJECT_DIR/venv/bin/python" ]; then
+    PYTHON_BIN="$PROJECT_DIR/venv/bin/python"
+elif [ -f "$PROJECT_DIR/.venv/bin/python" ]; then
+    PYTHON_BIN="$PROJECT_DIR/.venv/bin/python"
+fi
+
+# Handle 'ands shell' or 'ands-shell' arguments gracefully
+if [ "$1" == "shell" ] || [ "$1" == "cli" ] || [ "$1" == "console" ]; then
+    shift
+fi
+
+exec "$PYTHON_BIN" "$PROJECT_DIR/ands.py" "$@"
